@@ -65,7 +65,7 @@ namespace ProfanityDetector.Controllers
         }
 
         [HttpGet]
-        [Route("/profanity/word")]
+        [Route("~/profanity/word")]
         public IActionResult AddWord(string word, string language = "pt")
         {
             var file = System.IO.File.ReadAllText("wordList.json");
