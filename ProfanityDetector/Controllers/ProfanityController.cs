@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using System;
@@ -11,11 +12,13 @@ namespace ProfanityDetector.Controllers
 
     {
         private ProfanityFilter.ProfanityFilter _profanityFilter;
+        private readonly IConfiguration _config;
 
-        public ProfanityController()
+        public ProfanityController(IConfiguration config)
         {
             _profanityFilter = new ProfanityFilter.ProfanityFilter();
             _profanityFilter.AddProfanity(WordList());
+            _config = config;
         }
 
         [HttpGet]
@@ -42,7 +45,7 @@ namespace ProfanityDetector.Controllers
 
         private void SaveChanges(ProfanityLog profanityLog)
         {
-            IMongoClient client = new MongoClient(Environment.GetEnvironmentVariable("MongoConnectionString"));
+            IMongoClient client = new MongoClient(_config.GetValue<string>("MongoConnectionString"));
             IMongoDatabase database = client.GetDatabase("ProfanityLog");
             IMongoCollection<ProfanityLog> colProfanityLog = database.GetCollection<ProfanityLog>("ProfanityLog");
 
