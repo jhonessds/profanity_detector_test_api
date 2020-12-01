@@ -3,6 +3,9 @@ using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace ProfanityDetector.Controllers
 {
@@ -55,9 +58,34 @@ namespace ProfanityDetector.Controllers
         private string[] WordList()
         {
             var file = System.IO.File.ReadAllText("wordList.json");
-            var txtJson = JsonConvert.DeserializeObject<string[]>(file);
-            string[] wordList = txtJson;
+            var txtJson = JsonConvert.DeserializeObject<List<BadWord>>(file);
+            string[] wordList = txtJson.Select(x => x.Word).ToArray();
+
             return wordList;
+        }
+
+        [HttpPost]
+        public IActionResult AddWord(string word, string language = "pt")
+        {
+            var file = System.IO.File.ReadAllText("wordList.json");
+            var words = JsonConvert.DeserializeObject<List<BadWord>>(file);
+
+            var contains = words.Find(x => x.Word == word && x.Language == language);
+            if (contains != null)
+            {
+                return BadRequest("Já xingada ლ( ̅°̅ ੪ ̅°̅ )ლ");
+            }
+
+            var add = new BadWord(word, language);
+            words.Add(add);
+
+            using (StreamWriter outputFile = new StreamWriter("wordList.json"))
+            {
+                string json = JsonConvert.SerializeObject(words);
+                outputFile.Write(json);
+            }
+
+            return Ok("Que boca suja heim meu jovem ಠᴗಠ");
         }
     }
 }
