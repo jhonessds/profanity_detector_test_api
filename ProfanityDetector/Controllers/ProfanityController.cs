@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Newtonsoft.Json;
-using System;
+using ProfanityDetector.Extensions;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,20 +27,22 @@ namespace ProfanityDetector.Controllers
         [HttpGet]
         public IActionResult GetWord(string term)
         {
-            var result = _profanityFilter.IsProfanity(term);
-            var profanityLog = new ProfanityLog(term, result, "Validate Word");
+            var isProfanity = _profanityFilter.IsProfanity(term);
+
+            var termAfterLeet = term.LeetDecode();
+            var profanityLog = new ProfanityLog(termAfterLeet, isProfanity, "Validate Word", term);
             SaveChanges(profanityLog);
 
             return Ok(profanityLog);
         }
 
         [HttpGet]
-        [Route("/profanity/sentence")]
+        [Route("~/profanity/sentence")]
         public IActionResult GetSentence(string sentence)
         {
             var result = _profanityFilter.ContainsProfanity(sentence);
-
-            var profanityLog = new ProfanityLog(sentence, result, "Validate Sentence");
+            var sentenceAfterLeet = sentence.LeetDecode();
+            var profanityLog = new ProfanityLog(sentenceAfterLeet, result, "Validate Sentence", sentence);
             SaveChanges(profanityLog);
 
             return Ok(profanityLog);
@@ -64,7 +66,8 @@ namespace ProfanityDetector.Controllers
             return wordList;
         }
 
-        [HttpPost]
+        [HttpGet]
+        [Route("~/profanity/words")]
         public IActionResult AddWord(string word, string language = "pt")
         {
             var file = System.IO.File.ReadAllText("wordList.json");
@@ -86,6 +89,29 @@ namespace ProfanityDetector.Controllers
             }
 
             return Ok("Que boca suja heim meu jovem ಠᴗಠ");
+        }
+
+        [HttpDelete]
+        [Route("~/profanity/words/word")]
+        public IActionResult ToSpaceWord(string word)
+        {
+            var file = System.IO.File.ReadAllText("wordList.json");
+            var words = JsonConvert.DeserializeObject<List<BadWord>>(file);
+
+            var badWord = words.Find(x => x.Word == word);
+            if (badWord == null)
+            {
+                return NotFound(@"Não encontrada ¯\_(ツ)_/¯");
+            }
+            words.Remove(badWord);
+
+            using (StreamWriter outputFile = new StreamWriter("wordList.json"))
+            {
+                string json = JsonConvert.SerializeObject(words);
+                outputFile.Write(json);
+            }
+
+            return Ok("Palavra removida ( ͡° ͜ʖ ͡°)");
         }
     }
 }
