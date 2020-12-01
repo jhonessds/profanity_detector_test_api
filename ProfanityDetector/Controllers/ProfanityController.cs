@@ -64,7 +64,7 @@ namespace ProfanityDetector.Controllers
             return wordList;
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("/profanity/word")]
         public IActionResult AddWord(string word, string language = "pt")
         {
